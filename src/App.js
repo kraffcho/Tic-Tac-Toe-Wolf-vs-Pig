@@ -9,17 +9,19 @@ function App() {
     Array(BOARD_SIZE * BOARD_SIZE).fill(null)
   );
   const [xIsNext, setXIsNext] = useState(true);
-  const x = "🐺";
-  const o = "🐷";
+  const X_SYMBOL = "🐺";
+  const O_SYMBOL = "🐷";
+  const MIN_DELAY = 300;
+  const MAX_DELAY = 1500;
 
   useEffect(() => {
     if (!xIsNext && !findWinningLine(squares)) {
-      const randomDelay = Math.floor(Math.random() * 1700) + 300;
+      const randomDelay = Math.floor(Math.random() * MAX_DELAY) + MIN_DELAY;
       setTimeout(() => {
-        const computerMove = getComputerMove(squares, o, x);
+        const computerMove = getComputerMove(squares, O_SYMBOL, X_SYMBOL);
         if (computerMove !== null) {
           const newSquares = [...squares];
-          newSquares[computerMove] = o;
+          newSquares[computerMove] = O_SYMBOL;
           setSquares(newSquares);
           setXIsNext(true);
         }
@@ -32,7 +34,7 @@ function App() {
       return;
     }
     const newSquares = [...squares];
-    newSquares[i] = x;
+    newSquares[i] = X_SYMBOL;
     setSquares(newSquares);
     setXIsNext(false);
   };
@@ -42,9 +44,7 @@ function App() {
     setXIsNext(true);
   };
 
-  const calculateWinner = (squares) => {
-    return findWinningLine(squares);
-  };
+  findWinningLine(squares);
 
   const getComputerMove = (squares, mySymbol, opponentSymbol) => {
     for (const [a, b, c] of winningLines) {
@@ -107,9 +107,7 @@ function App() {
     const winnerInfo = findWinningLine(squares);
     const isWinningSquare = winnerInfo && winnerInfo.line.includes(i);
     const isClicked = squares[i] !== null;
-    const squareClassName = `square${isWinningSquare ? " winner" : ""}${
-      isClicked ? " clicked" : ""
-    }`;
+    const squareClassName = [`square`, isWinningSquare && "winner", isClicked && "clicked",].filter(Boolean).join(" ");
     return (
       <button
         className={squareClassName}
@@ -130,7 +128,7 @@ function App() {
     if (squares.every((square) => square)) {
       return "Draw Game!";
     }
-    return `Next player: ${xIsNext ? x : o}`;
+    return `Next player: ${xIsNext ? X_SYMBOL : O_SYMBOL}`;
   })();
 
   const renderBoard = () => {
@@ -162,7 +160,7 @@ function App() {
   return (
     <div className="game">
       <h1 className="game-title">
-        {x} vs. {o}
+        {X_SYMBOL} vs. {O_SYMBOL}
       </h1>
       <div className="game-board" role="grid">
         {renderBoard()}
@@ -170,18 +168,22 @@ function App() {
       <p className="status" aria-live="polite">
         {status}
       </p>
-      {status === "Draw Game!" || calculateWinner(squares) ? (
-        <button className="new-game-button" onClick={handleNewGame}>
+      {status === "Draw Game!" || findWinningLine(squares) ? (
+        <button
+          className="new-game-button"
+          aria-label={`Start a new game`}
+          onClick={handleNewGame}
+        >
           New Game
         </button>
       ) : null}
-      {calculateWinner(squares) && (
-        <audio id="xWinsSound" autoPlay>
+      {findWinningLine(squares) && (
+        <audio id="WinnerSound" autoPlay>
           <source
             src={
-              calculateWinner(squares).winner === x
+              findWinningLine(squares).winner === X_SYMBOL
                 ? "/audio/x_wins.mp3"
-                : calculateWinner(squares).winner === o
+                : findWinningLine(squares).winner === O_SYMBOL
                 ? "/audio/o_wins.mp3"
                 : ""
             }
