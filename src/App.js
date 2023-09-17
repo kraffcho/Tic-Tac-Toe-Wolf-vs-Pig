@@ -19,15 +19,17 @@ function App() {
   const [squares, setSquares] = useState(
     Array(BOARD_SIZE * BOARD_SIZE).fill(null)
   );
-  const [xIsNext, setXIsNext] = useState(true);
+  // Randomly decide who goes first: player (true) or computer (false)
+  const [xIsNext, setXIsNext] = useState(Math.random() < 0.5);
+  const [isNewGame, setIsNewGame] = useState(true);
   const [audioError, setAudioError] = useState(null);
   const X_SYMBOL = "🐺";
   const O_SYMBOL = "🐷";
   const MIN_DELAY = 300;
-  const MAX_DELAY = 1500;
+  const MAX_DELAY = 1700;
 
   useEffect(() => {
-    if (!xIsNext && !findWinningLine(squares)) {
+    if (!isNewGame && !xIsNext && !findWinningLine(squares)) {
       const randomDelay = Math.floor(Math.random() * MAX_DELAY) + MIN_DELAY;
       setTimeout(() => {
         const computerMove = getComputerMove(squares, O_SYMBOL, X_SYMBOL);
@@ -39,7 +41,8 @@ function App() {
         }
       }, randomDelay);
     }
-  }, [squares, xIsNext]);
+    setIsNewGame(false); // Reset the new game flag
+  }, [squares, xIsNext, isNewGame]);
 
   // Function to handle audio errors
   const handleAudioError = (e) => {
@@ -59,7 +62,8 @@ function App() {
 
   const handleNewGame = () => {
     setSquares(Array(BOARD_SIZE * BOARD_SIZE).fill(null));
-    setXIsNext(true);
+    setXIsNext(Math.random() < 0.5); // Randomize who starts a new game
+    setIsNewGame(true); // Set the new game flag to true
   };
 
   const getComputerMove = (squares, mySymbol, opponentSymbol) => {
