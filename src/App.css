@@ -1,0 +1,140 @@
+@import url("https://fonts.googleapis.com/css2?family=Gluten:wght@100;200;300;400&display=swap");
+
+html {
+    box-sizing: border-box;
+}
+
+*,
+*:before,
+*:after {
+    box-sizing: inherit;
+}
+
+:root {
+    --board-bg-color: #333;
+    --square-size-desktop: 120px;
+    --square-size-mobile: 80px;
+    --square-bg-color: #f2ffa7;
+    --square-winner-bg-color: #9cf29f;
+}
+
+body {
+    font-size: 16px;
+    margin: 0;
+    padding: 20px;
+    background-color: #e0dc55;
+}
+
+.game {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    font-family: Arial, sans-serif;
+}
+
+.game-title {
+    margin: 0 20px 20px;
+    font-family: "Gluten", cursive;
+    font-size: clamp(30px, 7vw, 48px);
+    color: #f92f60;
+    text-shadow: 1px 1px 1px #333;
+}
+
+.game-board {
+    display: grid;
+    grid-template-columns: repeat(3, var(--square-size-desktop));
+    grid-gap: 10px;
+    background-color: var(--board-bg-color);
+    border-radius: 5px;
+    border: 1px solid #000;
+    box-shadow: 0 0 5px #000;
+    padding: 20px;
+}
+
+.square {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(28px, 7vw, 46px);
+    background-color: var(--square-bg-color);
+    color: #333;
+    border: 1px solid #000;
+    width: var(--square-size-desktop);
+    height: var(--square-size-desktop);
+    text-shadow: 1px 1px 1px #333;
+    transition: background-color 0.3s ease-in-out;
+    cursor: pointer;
+}
+
+.square:nth-child(2) {
+    margin-block: 10px;
+}
+
+.square:hover:not(.winner):not(.clicked) {
+    background-color: #f3ef77;
+}
+
+.clicked {
+    box-shadow: 2px 2px 5px #111 inset;
+    background-color: #eee;
+    cursor: default;
+    transition: 0.3s;
+}
+
+.status {
+    margin: 20px 0;
+    font-family: "Gluten", cursive;
+    font-size: clamp(30px, 7vw, 48px);
+    color: #f92f60;
+    text-shadow: 1px 1px 1px #333;
+}
+
+.winner {
+    background-color: var(--square-winner-bg-color);
+    color: #fff;
+    font-weight: bold;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 var(--square-winner-bg-color);
+    }
+
+    70% {
+        box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+    }
+}
+
+.new-game-button {
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 15px 30px;
+    margin-top: 15px;
+    font-size: 16px;
+    transition: 0.3s;
+    border: 1px solid #fff;
+    background-color: #f46f52;
+    cursor: pointer;
+}
+
+.new-game-button:hover {
+    background-color: #2d2d2d;
+}
+
+@media (max-width: 480px) {
+    .game-board {
+        grid-template-columns: repeat(3, var(--square-size-mobile));
+    }
+
+    .square {
+        width: var(--square-size-mobile);
+        height: var(--square-size-mobile);
+    }
+}
