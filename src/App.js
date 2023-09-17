@@ -13,15 +13,14 @@ function App() {
 
   useEffect(() => {
     if (!xIsNext) {
-      // It's the computer's turn
+      // Check if the game is already won by the player or if the board is full
       if (
         calculateWinner(squares) ||
         squares.every((square) => square === x || square === o)
       ) {
-        // X has won or the board is full, no need for the computer to make a move
-        setXIsNext(true); // Switch back to the player's turn
-        return;
+        return; // Return early and do not proceed to computer's turn
       }
+
       const randomDelay = Math.floor(Math.random() * 1700) + 300; // Random delay between 300 and 2000 milliseconds
       setTimeout(() => {
         const computerMove = getComputerMove(squares);
@@ -42,7 +41,7 @@ function App() {
     const newSquares = [...squares];
     newSquares[i] = x;
     setSquares(newSquares);
-    setXIsNext(false); // Switch to the computer's turn
+    setXIsNext(false);
   };
 
   const handleNewGame = () => {
@@ -75,8 +74,46 @@ function App() {
   };
 
   const getComputerMove = (squares) => {
-    // Replace this with your own logic for the computer's move
-    // This is a basic example that makes a random move in an empty square
+    const winningLines = [
+      [0, 1, 2],
+      [3, 4, 5],
+      [6, 7, 8],
+      [0, 3, 6],
+      [1, 4, 7],
+      [2, 5, 8],
+      [0, 4, 8],
+      [2, 4, 6],
+    ];
+
+    // Check for a winning move and make it
+    for (let i = 0; i < winningLines.length; i++) {
+      const [a, b, c] = winningLines[i];
+      if (squares[a] === o && squares[a] === squares[b] && !squares[c]) {
+        return c;
+      }
+      if (squares[a] === o && squares[a] === squares[c] && !squares[b]) {
+        return b;
+      }
+      if (squares[b] === o && squares[b] === squares[c] && !squares[a]) {
+        return a;
+      }
+    }
+
+    // Check for player's winning move and block it
+    for (let i = 0; i < winningLines.length; i++) {
+      const [a, b, c] = winningLines[i];
+      if (squares[a] === x && squares[a] === squares[b] && !squares[c]) {
+        return c;
+      }
+      if (squares[a] === x && squares[a] === squares[c] && !squares[b]) {
+        return b;
+      }
+      if (squares[b] === x && squares[b] === squares[c] && !squares[a]) {
+        return a;
+      }
+    }
+
+    // If neither of the above, make a random move
     const emptySquares = squares
       .map((square, index) => (square === null ? index : null))
       .filter((index) => index !== null);
@@ -90,8 +127,8 @@ function App() {
   };
 
   const renderSquare = (i) => {
-    const { winner, line } = calculateWinner(squares) || {};
-    const isWinningSquare = winner && line.includes(i);
+    const winnerInfo = calculateWinner(squares);
+    const isWinningSquare = winnerInfo && winnerInfo.line.includes(i);
     const isClicked = squares[i] !== null;
     const squareClassName = `square${isWinningSquare ? " winner" : ""}${
       isClicked ? " clicked" : ""
