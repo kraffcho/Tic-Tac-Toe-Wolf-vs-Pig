@@ -2,6 +2,17 @@ import React, { useState, useEffect } from "react";
 import { findWinningLine, winningLines } from "./utils/winningLines";
 import "./App.css";
 
+const computeGameStatus = (squares, xIsNext, X_SYMBOL, O_SYMBOL) => {
+  const { winner } = findWinningLine(squares) || {};
+  if (winner) {
+    return `Winner: ${winner}`;
+  }
+  if (squares.every((square) => square)) {
+    return "Draw Game!";
+  }
+  return `Next player: ${xIsNext ? X_SYMBOL : O_SYMBOL}`;
+};
+
 const BOARD_SIZE = 3;
 
 function App() {
@@ -9,6 +20,7 @@ function App() {
     Array(BOARD_SIZE * BOARD_SIZE).fill(null)
   );
   const [xIsNext, setXIsNext] = useState(true);
+  const [audioError, setAudioError] = useState(null);
   const X_SYMBOL = "🐺";
   const O_SYMBOL = "🐷";
   const MIN_DELAY = 300;
@@ -29,6 +41,12 @@ function App() {
     }
   }, [squares, xIsNext]);
 
+  // Function to handle audio errors
+  const handleAudioError = (e) => {
+    console.error("Audio Error: ", e);
+    setAudioError("An error occurred while trying to play the audio.");
+  };
+
   const handleClick = (i) => {
     if (findWinningLine(squares) || squares[i]) {
       return;
@@ -43,8 +61,6 @@ function App() {
     setSquares(Array(BOARD_SIZE * BOARD_SIZE).fill(null));
     setXIsNext(true);
   };
-
-  findWinningLine(squares);
 
   const getComputerMove = (squares, mySymbol, opponentSymbol) => {
     for (const [a, b, c] of winningLines) {
@@ -107,7 +123,13 @@ function App() {
     const winnerInfo = findWinningLine(squares);
     const isWinningSquare = winnerInfo && winnerInfo.line.includes(i);
     const isClicked = squares[i] !== null;
-    const squareClassName = [`square`, isWinningSquare && "winner", isClicked && "clicked",].filter(Boolean).join(" ");
+    const squareClassName = [
+      `square`,
+      isWinningSquare && "winner",
+      isClicked && "clicked",
+    ]
+      .filter(Boolean)
+      .join(" ");
     return (
       <button
         className={squareClassName}
@@ -119,17 +141,6 @@ function App() {
       </button>
     );
   };
-
-  const status = (() => {
-    const { winner } = findWinningLine(squares) || {};
-    if (winner) {
-      return `Winner: ${winner}`;
-    }
-    if (squares.every((square) => square)) {
-      return "Draw Game!";
-    }
-    return `Next player: ${xIsNext ? X_SYMBOL : O_SYMBOL}`;
-  })();
 
   const renderBoard = () => {
     const board = [];
@@ -157,6 +168,8 @@ function App() {
     return board;
   };
 
+  const status = computeGameStatus(squares, xIsNext, X_SYMBOL, O_SYMBOL);
+
   return (
     <div className="game">
       <h1 className="game-title">
@@ -178,7 +191,7 @@ function App() {
         </button>
       ) : null}
       {findWinningLine(squares) && (
-        <audio id="WinnerSound" autoPlay>
+        <audio id="WinnerSound" autoPlay onError={handleAudioError}>
           <source
             src={
               findWinningLine(squares).winner === X_SYMBOL
@@ -189,7 +202,7 @@ function App() {
             }
             type="audio/mpeg"
           />
-          Your browser does not support the audio element.
+          {audioError || "Your browser does not support the audio element."}
         </audio>
       )}
     </div>
