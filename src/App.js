@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { findWinningLine, winningLines } from "./utils/winningLines";
 import "./App.css";
 
 const BOARD_SIZE = 3;
@@ -12,30 +13,22 @@ function App() {
   const o = "🐷";
 
   useEffect(() => {
-    if (!xIsNext) {
-      // Check if the game is already won by the player or if the board is full
-      if (
-        calculateWinner(squares) ||
-        squares.every((square) => square === x || square === o)
-      ) {
-        return; // Return early and do not proceed to computer's turn
-      }
-
-      const randomDelay = Math.floor(Math.random() * 1700) + 300; // Random delay between 300 and 2000 milliseconds
+    if (!xIsNext && !findWinningLine(squares)) {
+      const randomDelay = Math.floor(Math.random() * 1700) + 300;
       setTimeout(() => {
-        const computerMove = getComputerMove(squares);
+        const computerMove = getComputerMove(squares, o, x);
         if (computerMove !== null) {
           const newSquares = [...squares];
           newSquares[computerMove] = o;
           setSquares(newSquares);
-          setXIsNext(true); // Switch back to the player's turn
+          setXIsNext(true);
         }
       }, randomDelay);
     }
   }, [squares, xIsNext]);
 
   const handleClick = (i) => {
-    if (calculateWinner(squares) || squares[i] || !xIsNext) {
+    if (findWinningLine(squares) || squares[i]) {
       return;
     }
     const newSquares = [...squares];
@@ -50,84 +43,68 @@ function App() {
   };
 
   const calculateWinner = (squares) => {
-    const lines = [
-      [0, 1, 2],
-      [3, 4, 5],
-      [6, 7, 8],
-      [0, 3, 6],
-      [1, 4, 7],
-      [2, 5, 8],
-      [0, 4, 8],
-      [2, 4, 6],
-    ];
-    for (let i = 0; i < lines.length; i++) {
-      const [a, b, c] = lines[i];
+    return findWinningLine(squares);
+  };
+
+  const getComputerMove = (squares, mySymbol, opponentSymbol) => {
+    for (const [a, b, c] of winningLines) {
       if (
-        squares[a] &&
         squares[a] === squares[b] &&
-        squares[a] === squares[c]
+        squares[a] === mySymbol &&
+        squares[c] === null
       ) {
-        return { winner: squares[a], line: lines[i] };
+        return c;
       }
+      if (
+        squares[a] === squares[c] &&
+        squares[a] === mySymbol &&
+        squares[b] === null
+      ) {
+        return b;
+      }
+      if (
+        squares[b] === squares[c] &&
+        squares[b] === mySymbol &&
+        squares[a] === null
+      ) {
+        return a;
+      }
+    }
+    for (const [a, b, c] of winningLines) {
+      if (
+        squares[a] === squares[b] &&
+        squares[a] === opponentSymbol &&
+        squares[c] === null
+      ) {
+        return c;
+      }
+      if (
+        squares[a] === squares[c] &&
+        squares[a] === opponentSymbol &&
+        squares[b] === null
+      ) {
+        return b;
+      }
+      if (
+        squares[b] === squares[c] &&
+        squares[b] === opponentSymbol &&
+        squares[a] === null
+      ) {
+        return a;
+      }
+    }
+    const emptySquares = squares
+      .map((sq, i) => (sq === null ? i : null))
+      .filter((i) => i !== null);
+    if (emptySquares.length) {
+      const randomMove = Math.floor(Math.random() * emptySquares.length);
+      return emptySquares[randomMove];
     }
     return null;
   };
 
-  const getComputerMove = (squares) => {
-    const winningLines = [
-      [0, 1, 2],
-      [3, 4, 5],
-      [6, 7, 8],
-      [0, 3, 6],
-      [1, 4, 7],
-      [2, 5, 8],
-      [0, 4, 8],
-      [2, 4, 6],
-    ];
-
-    // Check for a winning move and make it
-    for (let i = 0; i < winningLines.length; i++) {
-      const [a, b, c] = winningLines[i];
-      if (squares[a] === o && squares[a] === squares[b] && !squares[c]) {
-        return c;
-      }
-      if (squares[a] === o && squares[a] === squares[c] && !squares[b]) {
-        return b;
-      }
-      if (squares[b] === o && squares[b] === squares[c] && !squares[a]) {
-        return a;
-      }
-    }
-
-    // Check for player's winning move and block it
-    for (let i = 0; i < winningLines.length; i++) {
-      const [a, b, c] = winningLines[i];
-      if (squares[a] === x && squares[a] === squares[b] && !squares[c]) {
-        return c;
-      }
-      if (squares[a] === x && squares[a] === squares[c] && !squares[b]) {
-        return b;
-      }
-      if (squares[b] === x && squares[b] === squares[c] && !squares[a]) {
-        return a;
-      }
-    }
-
-    // If neither of the above, make a random move
-    const emptySquares = squares
-      .map((square, index) => (square === null ? index : null))
-      .filter((index) => index !== null);
-
-    if (emptySquares.length === 0) {
-      return null; // No available moves
-    }
-
-    const randomIndex = Math.floor(Math.random() * emptySquares.length);
-    return emptySquares[randomIndex];
-  };
-
   const renderSquare = (i) => {
-    const winnerInfo = calculateWinner(squares);
+    const winnerInfo = findWinningLine(squares);
     const isWinningSquare = winnerInfo && winnerInfo.line.includes(i);
     const isClicked = squares[i] !== null;
     const squareClassName = `square${isWinningSquare ? " winner" : ""}${
@@ -146,7 +123,7 @@ function App() {
   };
 
   const status = (() => {
-    const { winner } = calculateWinner(squares) || {};
+    const { winner } = findWinningLine(squares) || {};
     if (winner) {
       return `Winner: ${winner}`;
     }

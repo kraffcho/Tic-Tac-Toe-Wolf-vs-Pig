@@ -12,7 +12,7 @@ html {
 
 :root {
     --board-bg-color: #333;
-    --square-size-desktop: 120px;
+    --square-size-desktop: 100px;
     --square-size-mobile: 80px;
     --square-bg-color: #f2ffa7;
     --square-winner-bg-color: #9cf29f;
