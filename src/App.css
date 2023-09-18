@@ -1,4 +1,5 @@
 @import url("https://fonts.googleapis.com/css2?family=Gluten:wght@100;200;300;400&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@100;200;300;400;500;600;700&display=swap");
 
 html {
     box-sizing: border-box;
@@ -8,6 +9,7 @@ html {
 *:before,
 *:after {
     box-sizing: inherit;
+    margin: 0;
 }
 
 :root {
@@ -30,15 +32,7 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    font-family: Arial, sans-serif;
-}
-
-.game-title {
-    margin: 0 20px 20px;
-    font-family: "Gluten", cursive;
-    font-size: clamp(30px, 7vw, 48px);
-    color: #f92f60;
-    text-shadow: 1px 1px 1px #333;
+    font-family: "Saira Condensed", sans-serif;
 }
 
 .game-board {
@@ -84,9 +78,10 @@ body {
 
 .status {
     margin: 20px 0;
-    font-family: "Gluten", cursive;
-    font-size: clamp(30px, 7vw, 48px);
-    color: #f92f60;
+    font-family: "Saira Condensed", sans-serif;
+    font-size: clamp(24px, 7vw, 32px);
+    color: #fff;
+    font-weight: bold;
     text-shadow: 1px 1px 1px #333;
 }
 
@@ -111,22 +106,59 @@ body {
     }
 }
 
+.win-count {
+    margin-bottom: -5px;
+    width: 100%;
+    max-width: 320px;
+    font-family: "Saira Condensed", sans-serif;
+    display: flex;
+    justify-content: space-between;
+    font-size: 32px;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 1px 1px 1px #555;
+    z-index: 1;
+}
+
+.progress-bar {
+    margin-bottom: 10px;
+    width: 100%;
+    height: 12px;
+    max-width: 360px;
+    background-color: #ccc;
+    border: 1px solid #fff;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.player-progress {
+    height: 100%;
+    background-color: #8f8484;
+    float: left;
+    transition: 500ms;
+}
+
+.computer-progress {
+    height: 100%;
+    background-color: #ff8687;
+    float: right;
+    transition: 500ms;
+}
+
 .new-game-button {
+    padding: 15px 30px;
     position: fixed;
     top: 50%;
     left: 50%;
     color: #fff;
-    border: none;
+    background-color: #f46f52;
+    border: 1px solid #fff;
     border-radius: 5px;
-    padding: 15px 30px;
-    margin-top: 15px;
+    box-shadow: 0 1px 6px #111;
     font-size: clamp(16px, 4vw, 28px);
     transition: 0.3s;
-    border: 1px solid #fff;
-    background-color: #f46f52;
     cursor: pointer;
     transform: translate(-50%, -50%);
-    opacity: 0;
     animation: fadeInAndMove 2s ease-out forwards;
     animation-delay: 500ms;
     z-index: -1;
@@ -138,19 +170,20 @@ body {
 
 @keyframes fadeInAndMove {
     0% {
+        z-index: -1;
         opacity: 0;
-        transform: translate(-50%, -25px);
+        transform: scale(.6) translate(-50%, -25px);
     }
 
     50% {
         z-index: -1;
-        transform: translate(-50%, 250px);
+        opacity: 1;
+        transform: scale(.8) translate(-50%, 250px);
     }
 
     100% {
         z-index: 1;
-        opacity: 1;
-        transform: translate(-50%, -50%);
+        transform: scale(1) translate(-50%, -50%);
     }
 }
 
@@ -158,9 +191,11 @@ body {
     .game-board {
         grid-template-columns: repeat(3, var(--square-size-mobile));
     }
-
     .square {
         width: var(--square-size-mobile);
         height: var(--square-size-mobile);
+    }
+    .progress-bar {
+        max-width: 300px;
     }
 }

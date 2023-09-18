@@ -23,12 +23,34 @@ function App() {
   const [xIsNext, setXIsNext] = useState(Math.random() < 0.5);
   const [isNewGame, setIsNewGame] = useState(true);
   const [audioError, setAudioError] = useState(null);
+  const [playerWins, setPlayerWins] = useState(
+    parseInt(localStorage.getItem("playerWins"), 10) || 0
+  );
+  const [computerWins, setComputerWins] = useState(
+    parseInt(localStorage.getItem("computerWins"), 10) || 0
+  );
+
   const X_SYMBOL = "🐺";
   const O_SYMBOL = "🐷";
   const MIN_DELAY = 300;
   const MAX_DELAY = 1700;
 
   useEffect(() => {
+    const { winner } = findWinningLine(squares) || {};
+
+    // If there is a winner, update win counts.
+    if (winner) {
+      if (winner === X_SYMBOL) {
+        const newPlayerWins = playerWins + 1;
+        setPlayerWins(newPlayerWins);
+        localStorage.setItem("playerWins", newPlayerWins);
+      } else if (winner === O_SYMBOL) {
+        const newComputerWins = computerWins + 1;
+        setComputerWins(newComputerWins);
+        localStorage.setItem("computerWins", newComputerWins);
+      }
+    }
+
     if (!isNewGame && !xIsNext && !findWinningLine(squares)) {
       const randomDelay = Math.floor(Math.random() * MAX_DELAY) + MIN_DELAY;
       setTimeout(() => {
@@ -43,6 +65,28 @@ function App() {
     }
     setIsNewGame(false); // Reset the new game flag
   }, [squares, xIsNext, isNewGame]);
+
+  useEffect(() => {
+    const winnerInfo = findWinningLine(squares);
+    if (winnerInfo) {
+      // Update win counts
+      if (winnerInfo.winner === X_SYMBOL) {
+        const newPlayerWins = playerWins + 1;
+        setPlayerWins(newPlayerWins);
+        localStorage.setItem("playerWins", newPlayerWins);
+      } else if (winnerInfo.winner === O_SYMBOL) {
+        const newComputerWins = computerWins + 1;
+        setComputerWins(newComputerWins);
+        localStorage.setItem("computerWins", newComputerWins);
+      }
+    }
+  }, [squares]);
+
+  // Calculate win percentage
+  const totalGames = playerWins + computerWins;
+  const playerWinPercentage =
+    totalGames === 0 ? 50 : ((playerWins / totalGames) * 100).toFixed(2);
+  const computerWinPercentage = (100 - playerWinPercentage).toFixed(2);
 
   // Function to handle audio errors
   const handleAudioError = (e) => {
@@ -176,9 +220,23 @@ function App() {
 
   return (
     <div className="game">
-      <h1 className="game-title">
-        {X_SYMBOL} vs. {O_SYMBOL}
+      <h1 className="win-count">
+        <span>{X_SYMBOL}</span>
+        <span>
+          {playerWins} : {computerWins}
+        </span>
+        <span>{O_SYMBOL}</span>
       </h1>
+      <div className="progress-bar">
+        <div
+          className="player-progress"
+          style={{ width: `${playerWinPercentage}%` }}
+        ></div>
+        <div
+          className="computer-progress"
+          style={{ width: `${computerWinPercentage}%` }}
+        ></div>
+      </div>
       <div className="game-board" role="grid">
         {renderBoard()}
       </div>
