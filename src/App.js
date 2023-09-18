@@ -8,7 +8,7 @@ const BOARD_SIZE = 3;
 
 function App() {
   const [squares, setSquares] = useState(
-    Array(BOARD_SIZE * BOARD_SIZE).fill(null)
+    Array.from({ length: BOARD_SIZE * BOARD_SIZE }, () => null)
   );
   const [isNewGame, setIsNewGame] = useState(true);
   const [audioError, setAudioError] = useState(null);
