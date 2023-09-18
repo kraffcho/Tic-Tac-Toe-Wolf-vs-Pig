@@ -24,7 +24,7 @@ function App() {
   const O_SYMBOL = "🐷";
   const MIN_DELAY = 300;
   const MAX_DELAY = 1700;
-  const MESSAGE_DURATION = 5000;
+  const MESSAGE_DURATION = 6000;
 
   const [currentMessage, setCurrentMessage] = useState("");
 
@@ -47,36 +47,38 @@ function App() {
     localStorage.setItem("computerWins", 0);
   };
 
+  const updateWins = (isPlayerWinner) => {
+    const newWins = isPlayerWinner ? playerWins + 1 : computerWins + 1;
+    const winKey = isPlayerWinner ? "playerWins" : "computerWins";
+
+    isPlayerWinner ? setPlayerWins(newWins) : setComputerWins(newWins);
+    localStorage.setItem(winKey, newWins);
+  };
+
   useEffect(() => {
-    const { winner } = findWinningLine(squares) || {};
+    const winnerInfo = findWinningLine(squares);
+    if (winnerInfo) {
+      const isPlayerWinner = winnerInfo.winner === X_SYMBOL;
 
-    // If there is a winner, show the message and update the win count
-    if (winner) {
-      const isPlayer = winner === X_SYMBOL;
-      const newWins = isPlayer ? playerWins + 1 : computerWins + 1;
-      const winKey = isPlayer ? "playerWins" : "computerWins";
+      // Use the function to update the wins
+      updateWins(isPlayerWinner);
 
-      isPlayer ? setPlayerWins(newWins) : setComputerWins(newWins);
-      localStorage.setItem(winKey, newWins);
-
-      const isPlayerWinner = winner === X_SYMBOL;
       setCurrentMessage(getRandomMessage(isPlayerWinner));
       setShowMessage({
         player: isPlayerWinner,
         computer: !isPlayerWinner,
       });
 
-      setTimeout(
-        () =>
-          setShowMessage({
-            ...showMessage,
-            [isPlayer ? "player" : "computer"]: false,
-          }),
-        MESSAGE_DURATION
-      );
+      setTimeout(() => {
+        setShowMessage({
+          ...showMessage,
+          [isPlayerWinner ? "player" : "computer"]: false,
+        });
+      }, MESSAGE_DURATION);
     }
 
-    if (!isNewGame && !xIsNext && !findWinningLine(squares)) {
+    // Existing logic for the computer's turn
+    if (!isNewGame && !xIsNext && !winnerInfo) {
       const randomDelay = Math.floor(Math.random() * MAX_DELAY) + MIN_DELAY;
       setTimeout(() => {
         const computerMove = getComputerMove(squares, O_SYMBOL, X_SYMBOL);
@@ -90,22 +92,6 @@ function App() {
     }
     setIsNewGame(false); // Reset the new game flag
   }, [squares, xIsNext, isNewGame]);
-
-  useEffect(() => {
-    const winnerInfo = findWinningLine(squares);
-    if (winnerInfo) {
-      // Update win counts
-      if (winnerInfo.winner === X_SYMBOL) {
-        const newPlayerWins = playerWins + 1;
-        setPlayerWins(newPlayerWins);
-        localStorage.setItem("playerWins", newPlayerWins);
-      } else if (winnerInfo.winner === O_SYMBOL) {
-        const newComputerWins = computerWins + 1;
-        setComputerWins(newComputerWins);
-        localStorage.setItem("computerWins", newComputerWins);
-      }
-    }
-  }, [squares]);
 
   // Calculate win percentage
   const totalGames = playerWins + computerWins;
