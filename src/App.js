@@ -1,17 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { findWinningLine, winningLines } from "./utils/winningLines";
+import { computeGameStatus } from "./utils/gameUtils";
 import "./App.css";
-
-const computeGameStatus = (squares, xIsNext, X_SYMBOL, O_SYMBOL) => {
-  const { winner } = findWinningLine(squares) || {};
-  if (winner) {
-    return `Winner: ${winner}`;
-  }
-  if (squares.every((square) => square)) {
-    return "Draw Game!";
-  }
-  return `Next player: ${xIsNext ? X_SYMBOL : O_SYMBOL}`;
-};
 
 const BOARD_SIZE = 3;
 
@@ -19,10 +9,9 @@ function App() {
   const [squares, setSquares] = useState(
     Array(BOARD_SIZE * BOARD_SIZE).fill(null)
   );
-  // Randomly decide who goes first: player (true) or computer (false)
-  const [xIsNext, setXIsNext] = useState(Math.random() < 0.5);
   const [isNewGame, setIsNewGame] = useState(true);
   const [audioError, setAudioError] = useState(null);
+  const [xIsNext, setXIsNext] = useState(Math.random() < 0.5);
   const [playerWins, setPlayerWins] = useState(
     parseInt(localStorage.getItem("playerWins"), 10) || 0
   );
@@ -34,21 +23,82 @@ function App() {
   const O_SYMBOL = "🐷";
   const MIN_DELAY = 300;
   const MAX_DELAY = 1700;
+  const MESSAGE_DURATION = 5000;
+
+  const [currentMessage, setCurrentMessage] = useState("");
+
+  const playerMessages = [
+    "Bacon, anyone?",
+    "Looks like you're not the sharpest pig in the pen!",
+    "Oink Oink! Guess who's the boss now!",
+    "You're about as useful as a screen door on a pigpen!",
+    "Who's the big bad wolf now, piggy?",
+    "Not by the hair of your chinny-chin-chin!",
+    "You couldn't even build a straw house!",
+    "Looks like I've hammed my way to victory!",
+    "Who's stuck in the mud now, piggy?",
+    "Just another day on the farm!",
+  ];
+
+  const computerMessages = [
+    "Nice try, wolf!",
+    "Is that all you got, wolf?",
+    "Better luck next time, wolf!",
+    "You're not so big and bad after all, wolf!",
+    "Who's afraid of the big bad wolf? Not me!",
+    "Looks like the wolf's howling at the moon tonight!",
+    "Three little pigs: 1, Big bad wolf: 0!",
+    "You can huff and puff, but you can't blow my house down!",
+    "Hey wolf, need a map back to the forest?",
+    "Wolf in sheep's clothing, still a loser!",
+  ];
+
+  const [showMessage, setShowMessage] = useState({
+    player: false,
+    computer: false,
+  });
+
+  const getRandomMessage = (isPlayerWinner) => {
+    const messages = isPlayerWinner ? playerMessages : computerMessages;
+    const randomIndex = Math.floor(Math.random() * messages.length);
+    return messages[randomIndex];
+  };
+
+  const handleResetScore = () => {
+    setPlayerWins(0);
+    setComputerWins(0);
+
+    localStorage.setItem("playerWins", 0);
+    localStorage.setItem("computerWins", 0);
+  };
 
   useEffect(() => {
     const { winner } = findWinningLine(squares) || {};
 
-    // If there is a winner, update win counts.
+    // If there is a winner, show the message and update the win count
     if (winner) {
-      if (winner === X_SYMBOL) {
-        const newPlayerWins = playerWins + 1;
-        setPlayerWins(newPlayerWins);
-        localStorage.setItem("playerWins", newPlayerWins);
-      } else if (winner === O_SYMBOL) {
-        const newComputerWins = computerWins + 1;
-        setComputerWins(newComputerWins);
-        localStorage.setItem("computerWins", newComputerWins);
-      }
+      const isPlayer = winner === X_SYMBOL;
+      const newWins = isPlayer ? playerWins + 1 : computerWins + 1;
+      const winKey = isPlayer ? "playerWins" : "computerWins";
+
+      isPlayer ? setPlayerWins(newWins) : setComputerWins(newWins);
+      localStorage.setItem(winKey, newWins);
+
+      const isPlayerWinner = winner === X_SYMBOL;
+      setCurrentMessage(getRandomMessage(isPlayerWinner));
+      setShowMessage({
+        player: isPlayerWinner,
+        computer: !isPlayerWinner,
+      });
+
+      setTimeout(
+        () =>
+          setShowMessage({
+            ...showMessage,
+            [isPlayer ? "player" : "computer"]: false,
+          }),
+        MESSAGE_DURATION
+      );
     }
 
     if (!isNewGame && !xIsNext && !findWinningLine(squares)) {
@@ -220,13 +270,35 @@ function App() {
 
   return (
     <div className="game">
-      <h1 className="win-count">
-        <span>{X_SYMBOL}</span>
-        <span>
+      <ul className="win-count">
+        <li className="player-icon">
+          {X_SYMBOL}
+          {showMessage.player && (
+            <div
+              className={`message-container ${
+                !showMessage.player ? "fade-out" : ""
+              }`}
+            >
+              {currentMessage}
+            </div>
+          )}
+        </li>
+        <li className="battle-score" onClick={handleResetScore}>
           {playerWins} : {computerWins}
-        </span>
-        <span>{O_SYMBOL}</span>
-      </h1>
+        </li>
+        <li className="computer-icon">
+          {O_SYMBOL}
+          {showMessage.computer && (
+            <div
+              className={`message-container ${
+                !showMessage.computer ? "fade-out" : ""
+              }`}
+            >
+              {currentMessage}
+            </div>
+          )}
+        </li>
+      </ul>
       <div className="progress-bar">
         <div
           className="player-progress"
