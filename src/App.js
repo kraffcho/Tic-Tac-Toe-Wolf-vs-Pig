@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { findWinningLine, winningLines } from "./utils/winningLines";
 import { playerMessages, computerMessages } from "./utils/winningMessages";
+import { getRandomLoserMessage } from "./utils/loserMessages";
 import { computeGameStatus } from "./utils/gameUtils";
 import "./App.css";
 
@@ -24,13 +25,15 @@ function App() {
   const O_SYMBOL = "🐷";
   const MIN_DELAY = 300;
   const MAX_DELAY = 1700;
-  const MESSAGE_DURATION = 6000;
+  const MESSAGE_DURATION = 5000; // 5 seconds for winner message
+  const LOSER_MESSAGE_DELAY = 1000; // 1 second after winner message disappears
 
   const [currentMessage, setCurrentMessage] = useState("");
+  const [currentLoserMessage, setCurrentLoserMessage] = useState("");
 
   const [showMessage, setShowMessage] = useState({
-    player: false,
-    computer: false,
+    player: { show: false, type: null },
+    computer: { show: false, type: null },
   });
 
   const getRandomMessage = (isPlayerWinner) => {
@@ -65,16 +68,25 @@ function App() {
 
       setCurrentMessage(getRandomMessage(isPlayerWinner));
       setShowMessage({
-        player: isPlayerWinner,
-        computer: !isPlayerWinner,
+        player: { show: isPlayerWinner, type: "winner" },
+        computer: { show: !isPlayerWinner, type: "winner" },
       });
 
       setTimeout(() => {
+        setCurrentLoserMessage(getRandomLoserMessage(!isPlayerWinner)); // set the loser message
         setShowMessage({
-          ...showMessage,
-          [isPlayerWinner ? "player" : "computer"]: false,
+          player: { show: !isPlayerWinner, type: "loser" },
+          computer: { show: isPlayerWinner, type: "loser" },
         });
-      }, MESSAGE_DURATION);
+      }, MESSAGE_DURATION + LOSER_MESSAGE_DELAY);
+
+      setTimeout(() => {
+        // Resetting loser message after another MESSAGE_DURATION milliseconds
+        setShowMessage({
+          player: { show: false, type: null },
+          computer: { show: false, type: null },
+        });
+      }, MESSAGE_DURATION * 2 + LOSER_MESSAGE_DELAY); // this will hide the loser message
     }
 
     // Existing logic for the computer's turn
@@ -234,13 +246,15 @@ function App() {
       <ul className="win-count">
         <li className="player-icon">
           {X_SYMBOL}
-          {showMessage.player && (
+          {showMessage.player.show && (
             <div
               className={`message-container ${
-                showMessage.player ? "fade-in" : ""
+                showMessage.player.show ? "fade-in" : ""
               }`}
             >
-              {currentMessage}
+              {showMessage.player.type === "winner"
+                ? currentMessage
+                : currentLoserMessage}
             </div>
           )}
         </li>
@@ -249,13 +263,15 @@ function App() {
         </li>
         <li className="computer-icon">
           {O_SYMBOL}
-          {showMessage.computer && (
+          {showMessage.computer.show && (
             <div
               className={`message-container ${
-                showMessage.computer ? "fade-in" : ""
+                showMessage.computer.show ? "fade-in" : ""
               }`}
             >
-              {currentMessage}
+              {showMessage.computer.type === "winner"
+                ? currentMessage
+                : currentLoserMessage}
             </div>
           )}
         </li>
