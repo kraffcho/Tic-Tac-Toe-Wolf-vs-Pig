@@ -34,6 +34,10 @@ body {
     font-family: "Saira Condensed", sans-serif;
 }
 
+.game-wrapper {
+    position: relative;
+}
+
 .game-board {
     display: grid;
     grid-template-columns: repeat(3, var(--square-size-desktop));
@@ -214,17 +218,49 @@ body {
     float: right;
 }
 
+.restart-button, .background-music {
+    position: absolute;
+    top: 50%;
+    right: 0px;
+    width: 40px;
+    height: 40px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ccc;
+    background-color: #333;
+    font-size: 18px;
+    border-radius: 50%;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    transform: translate(50%, -50%);
+    transition: color .2s ease-in-out;
+}
+
+.restart-button {
+    left: 0px;
+    transform: translate(-50%, -50%);
+}
+
+.restart-button:hover,
+.background-music:hover {
+    color: #e0dc55;
+}
+
 .new-game-button {
     padding: 15px 30px;
-    position: fixed;
+    position: absolute;
     top: 50%;
     left: 50%;
+    width: max-content;
     color: #fff;
-    background-color: #f46f52;
+    background-color: #333;
     border: 1px solid #fff;
     border-radius: 5px;
     box-shadow: 0 1px 6px #111;
-    font-size: clamp(16px, 4vw, 28px);
+    font-size: clamp(16px, 4vw, 20px);
     transition: 0.3s;
     cursor: pointer;
     transform: translate(-50%, -50%);
@@ -234,7 +270,7 @@ body {
 }
 
 .new-game-button:hover {
-    background-color: #2d2d2d;
+    background-color: #555;
 }
 
 @keyframes fadeInAndMove {

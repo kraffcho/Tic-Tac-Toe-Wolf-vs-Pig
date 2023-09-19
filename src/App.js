@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
+import { Board } from "./Board";
 import { findWinningLine, winningLines } from "./utils/winningLines";
 import { playerMessages, computerMessages } from "./utils/winningMessages";
 import { getRandomLoserMessage } from "./utils/loserMessages";
 import { computeGameStatus } from "./utils/gameUtils";
+import BackgroundMusic from "./utils/backgroundMusic";
 import "./App.css";
 
 const BOARD_SIZE = 3;
@@ -42,23 +44,24 @@ function App() {
     return messages[randomIndex];
   };
 
+  // Function to reset the score
   const handleResetScore = () => {
     setPlayerWins(0);
     setComputerWins(0);
-
     localStorage.setItem("playerWins", 0);
     localStorage.setItem("computerWins", 0);
   };
 
+  // Function to update the wins in state and local storage
   const updateWins = (isPlayerWinner) => {
     const newWins = isPlayerWinner ? playerWins + 1 : computerWins + 1;
     const winKey = isPlayerWinner ? "playerWins" : "computerWins";
-
     isPlayerWinner ? setPlayerWins(newWins) : setComputerWins(newWins);
     localStorage.setItem(winKey, newWins);
   };
 
   useEffect(() => {
+    // Check if there is a winner after each move
     const winnerInfo = findWinningLine(squares);
     if (winnerInfo) {
       const isPlayerWinner = winnerInfo.winner === X_SYMBOL;
@@ -73,6 +76,7 @@ function App() {
       });
 
       setTimeout(() => {
+        // Resetting winner message after MESSAGE_DURATION milliseconds
         setCurrentLoserMessage(getRandomLoserMessage(!isPlayerWinner)); // set the loser message
         setShowMessage({
           player: { show: !isPlayerWinner, type: "loser" },
@@ -117,6 +121,7 @@ function App() {
     setAudioError("An error occurred while trying to play the audio.");
   };
 
+  // Function to handle clicks on the squares of the board (player's turn)
   const handleClick = (i) => {
     if (findWinningLine(squares) || squares[i]) {
       return;
@@ -127,59 +132,51 @@ function App() {
     setXIsNext(false);
   };
 
+  // Function to handle clicks on the new game button
   const handleNewGame = () => {
+    const shouldPlayerGoFirst = Math.random() < 0.5;
     setSquares(Array(BOARD_SIZE * BOARD_SIZE).fill(null));
-    setXIsNext(Math.random() < 0.5); // Randomize who starts a new game
+    setXIsNext(shouldPlayerGoFirst);
     setIsNewGame(true); // Set the new game flag to true
+    // If the player should go first, do nothing
+    if (!shouldPlayerGoFirst) {
+      // If the computer should go first, make the computer's move
+      const computerMove = getComputerMove(
+        Array(BOARD_SIZE * BOARD_SIZE).fill(null),
+        O_SYMBOL,
+        X_SYMBOL
+      );
+      // If the computer has a valid move, make it and set the next turn to the player
+      const newSquares = Array(BOARD_SIZE * BOARD_SIZE).fill(null);
+      newSquares[computerMove] = O_SYMBOL;
+      setSquares(newSquares);
+      setXIsNext(true);
+    }
+  };
+
+  // Function to find the winning move for the computer
+  const findWinningMove = (squares, symbol, lines) => {
+    for (const [a, b, c] of lines) {
+      if (squares[a] === squares[b] && squares[a] === symbol && squares[c] === null)
+        return c;
+      if (squares[a] === squares[c] && squares[a] === symbol && squares[b] === null)
+        return b;
+      if (squares[b] === squares[c] && squares[b] === symbol && squares[a] === null)
+        return a;
+    }
+    return null;
   };
 
   const getComputerMove = (squares, mySymbol, opponentSymbol) => {
-    for (const [a, b, c] of winningLines) {
-      if (
-        squares[a] === squares[b] &&
-        squares[a] === mySymbol &&
-        squares[c] === null
-      ) {
-        return c;
-      }
-      if (
-        squares[a] === squares[c] &&
-        squares[a] === mySymbol &&
-        squares[b] === null
-      ) {
-        return b;
-      }
-      if (
-        squares[b] === squares[c] &&
-        squares[b] === mySymbol &&
-        squares[a] === null
-      ) {
-        return a;
-      }
-    }
-    for (const [a, b, c] of winningLines) {
-      if (
-        squares[a] === squares[b] &&
-        squares[a] === opponentSymbol &&
-        squares[c] === null
-      ) {
-        return c;
-      }
-      if (
-        squares[a] === squares[c] &&
-        squares[a] === opponentSymbol &&
-        squares[b] === null
-      ) {
-        return b;
-      }
-      if (
-        squares[b] === squares[c] &&
-        squares[b] === opponentSymbol &&
-        squares[a] === null
-      ) {
-        return a;
-      }
-    }
+    // First, check if the computer can win on this move
+    let move = findWinningMove(squares, mySymbol, winningLines);
+    if (move !== null) return move;
+
+    // Next, check if the player could win on the next move, and block them
+    move = findWinningMove(squares, opponentSymbol, winningLines);
+    if (move !== null) return move;
+
+    // If neither can win, make a random move
     const emptySquares = squares
       .map((sq, i) => (sq === null ? i : null))
       .filter((i) => i !== null);
@@ -187,6 +184,7 @@ function App() {
       const randomMove = Math.floor(Math.random() * emptySquares.length);
       return emptySquares[randomMove];
     }
+
     return null;
   };
 
@@ -202,41 +200,10 @@ function App() {
       .filter(Boolean)
       .join(" ");
     return (
-      <button
-        className={squareClassName}
-        onClick={() => handleClick(i)}
-        aria-label={`Square ${i}`}
-        disabled={squares[i] !== null || !xIsNext}
-      >
+      <button className={squareClassName} onClick={() => handleClick(i)} aria-label={`Square ${i}`} disabled={squares[i] !== null || !xIsNext}>
         {squares[i]}
       </button>
     );
-  };
-
-  const renderBoard = () => {
-    const board = [];
-    for (let row = 0; row < BOARD_SIZE; row++) {
-      const squaresRow = [];
-      for (let col = 0; col < BOARD_SIZE; col++) {
-        const index = row * BOARD_SIZE + col;
-        squaresRow.push(
-          <div
-            key={index}
-            className="square"
-            role="gridcell"
-            aria-label={`Square ${index}`}
-          >
-            {renderSquare(index)}
-          </div>
-        );
-      }
-      board.push(
-        <div className="board-row" key={row} role="row">
-          {squaresRow}
-        </div>
-      );
-    }
-    return board;
   };
 
   const status = computeGameStatus(squares, xIsNext, X_SYMBOL, O_SYMBOL);
@@ -286,21 +253,30 @@ function App() {
           style={{ width: `${computerWinPercentage}%` }}
         ></div>
       </div>
-      <div className="game-board" role="grid">
-        {renderBoard()}
+      <div className="game-wrapper">
+        <button className="restart-button" onClick={handleNewGame}>
+          <span className="material-symbols-outlined">refresh</span>
+        </button>
+        <Board
+          squares={squares}
+          handleClick={handleClick}
+          xIsNext={xIsNext}
+          findWinningLine={findWinningLine}
+        />
+        {status === "Draw Game!" || findWinningLine(squares) ? (
+          <button
+            className="new-game-button"
+            aria-label={`Start a new game`}
+            onClick={handleNewGame}
+          >
+            New Game
+          </button>
+        ) : null}
+        <BackgroundMusic />
       </div>
       <p className="status" aria-live="polite">
         {status}
       </p>
-      {status === "Draw Game!" || findWinningLine(squares) ? (
-        <button
-          className="new-game-button"
-          aria-label={`Start a new game`}
-          onClick={handleNewGame}
-        >
-          New Game
-        </button>
-      ) : null}
       {findWinningLine(squares) && (
         <audio id="WinnerSound" autoPlay onError={handleAudioError}>
           <source
