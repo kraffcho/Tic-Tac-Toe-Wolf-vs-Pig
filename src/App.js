@@ -188,24 +188,6 @@ function App() {
     return null;
   };
 
-  const renderSquare = (i) => {
-    const winnerInfo = findWinningLine(squares);
-    const isWinningSquare = winnerInfo && winnerInfo.line.includes(i);
-    const isClicked = squares[i] !== null;
-    const squareClassName = [
-      `square`,
-      isWinningSquare && "winner",
-      isClicked && "clicked",
-    ]
-      .filter(Boolean)
-      .join(" ");
-    return (
-      <button className={squareClassName} onClick={() => handleClick(i)} aria-label={`Square ${i}`} disabled={squares[i] !== null || !xIsNext}>
-        {squares[i]}
-      </button>
-    );
-  };
-
   const status = computeGameStatus(squares, xIsNext, X_SYMBOL, O_SYMBOL);
 
   return (
