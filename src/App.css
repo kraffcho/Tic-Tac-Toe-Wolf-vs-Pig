@@ -83,9 +83,8 @@ body {
     margin: 20px 0;
     font-family: "Saira Condensed", sans-serif;
     font-size: clamp(18px, 6vw, 28px);
-    color: #fff;
+    color: #333;
     font-weight: 600;
-    text-shadow: 1px 1px 1px #333;
 }
 
 .winner {
@@ -223,7 +222,7 @@ body {
     }
     100% {
         opacity: 1;
-        transform: translate(80%, -50%);
+        transform: translate(85%, -50%);
     }
 }
 
@@ -235,7 +234,7 @@ body {
     
     100% {
         opacity: 1;
-        transform: translate(-80%, -50%);
+        transform: translate(-85%, -50%);
     }
 }
 
