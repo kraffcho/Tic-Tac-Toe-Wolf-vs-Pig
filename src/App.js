@@ -193,7 +193,7 @@ function App() {
   return (
     <div className="game">
       <ul className="win-count">
-        <li className="player-icon">
+        <li className={`player-icon ${xIsNext ? "player-active" : ""}`}>
           {X_SYMBOL}
           {showMessage.player.show && (
             <div
@@ -210,7 +210,7 @@ function App() {
         <li className="battle-score" onClick={handleResetScore}>
           {playerWins} : {computerWins}
         </li>
-        <li className="computer-icon">
+        <li className={`computer-icon ${!xIsNext ? "computer-active" : ""}`}>
           {O_SYMBOL}
           {showMessage.computer.show && (
             <div
@@ -245,7 +245,7 @@ function App() {
           xIsNext={xIsNext}
           findWinningLine={findWinningLine}
         />
-        {status === "Draw Game!" || findWinningLine(squares) ? (
+        {status === "Draw Game! No one won this game." || findWinningLine(squares) ? (
           <button
             className="new-game-button"
             aria-label={`Start a new game`}

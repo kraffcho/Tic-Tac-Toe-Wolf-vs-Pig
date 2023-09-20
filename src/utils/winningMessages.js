@@ -9,6 +9,11 @@ export const playerMessages = [
   "Looks like I've hammed my way to victory!",
   "Who's stuck in the mud now, piggy?",
   "Just another day on the farm!",
+  "I've got a howl lot of game!",
+  "You just got wolfed down!",
+  "Paws and reflect on that loss, piggy!",
+  "I've got more than just teeth; I've got skills!",
+  "Howl about that? Another win for me!",
 ];
 
 export const computerMessages = [
@@ -17,9 +22,14 @@ export const computerMessages = [
   "Better luck next time, wolf!",
   "You're not so big and bad after all, wolf!",
   "Who's afraid of the big bad wolf? Not me!",
-  "Looks like the wolf's howling at the moon tonight!",
+  "Hey wolf, go cry to your fairy tale!",
   "Three little pigs: 1, Big bad wolf: 0!",
   "You can huff and puff, but you can't blow my house down!",
   "Hey wolf, need a map back to the forest?",
   "Wolf in sheep's clothing, still a loser!",
+  "Guess I'm the one bringing home the bacon!",
+  "Howl you like them apples, wolf?",
+  "Too slow, wolf! This piggy's got moves!",
+  "Your howls can't scare bricks!",
+  "Snout's up, wolf! You lose!",
 ];
