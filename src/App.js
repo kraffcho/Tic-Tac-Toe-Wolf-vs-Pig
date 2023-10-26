@@ -3,25 +3,19 @@ import { Board } from "./Board";
 import { findWinningLine, winningLines } from "./utils/winningLines";
 import { playerMessages, computerMessages } from "./utils/winningMessages";
 import { getRandomLoserMessage } from "./utils/loserMessages";
-import { computeGameStatus } from "./utils/gameUtils";
+import { WIN_STATE_POINTS, checkForWin, computeGameStatus } from "./utils/gameUtils";
 import BackgroundMusic from "./utils/backgroundMusic";
 import "./App.css";
 
 const BOARD_SIZE = 3;
 
 function App() {
-  const [squares, setSquares] = useState(
-    Array.from({ length: BOARD_SIZE * BOARD_SIZE }, () => null)
-  );
+  const [squares, setSquares] = useState(Array.from({ length: BOARD_SIZE * BOARD_SIZE }, () => null));
   const [isNewGame, setIsNewGame] = useState(true);
   const [audioError, setAudioError] = useState(null);
   const [xIsNext, setXIsNext] = useState(Math.random() < 0.5);
-  const [playerWins, setPlayerWins] = useState(
-    parseInt(localStorage.getItem("playerWins"), 10) || 0
-  );
-  const [computerWins, setComputerWins] = useState(
-    parseInt(localStorage.getItem("computerWins"), 10) || 0
-  );
+  const [playerWins, setPlayerWins] = useState(parseInt(localStorage.getItem("playerWins"), 10) || 0);
+  const [computerWins, setComputerWins] = useState(parseInt(localStorage.getItem("computerWins"), 10) || 0);
 
   const X_SYMBOL = "🐺";
   const O_SYMBOL = "🐷";
@@ -97,7 +91,8 @@ function App() {
     if (!isNewGame && !xIsNext && !winnerInfo) {
       const randomDelay = Math.floor(Math.random() * MAX_DELAY) + MIN_DELAY;
       setTimeout(() => {
-        const computerMove = getComputerMove(squares, O_SYMBOL, X_SYMBOL);
+        //const computerMove = getComputerMove(squares, O_SYMBOL, X_SYMBOL);
+        const computerMove = getComputerMoveMinMax(squares, O_SYMBOL, X_SYMBOL);
         if (computerMove !== null) {
           const newSquares = [...squares];
           newSquares[computerMove] = O_SYMBOL;
@@ -111,8 +106,7 @@ function App() {
 
   // Calculate win percentage
   const totalGames = playerWins + computerWins;
-  const playerWinPercentage =
-    totalGames === 0 ? 50 : ((playerWins / totalGames) * 100).toFixed(2);
+  const playerWinPercentage = totalGames === 0 ? 50 : ((playerWins / totalGames) * 100).toFixed(2);
   const computerWinPercentage = (100 - playerWinPercentage).toFixed(2);
 
   // Function to handle audio errors
@@ -141,11 +135,8 @@ function App() {
     // If the player should go first, do nothing
     if (!shouldPlayerGoFirst) {
       // If the computer should go first, make the computer's move
-      const computerMove = getComputerMove(
-        Array(BOARD_SIZE * BOARD_SIZE).fill(null),
-        O_SYMBOL,
-        X_SYMBOL
-      );
+      //const computerMove = getComputerMove(Array(BOARD_SIZE * BOARD_SIZE).fill(null), O_SYMBOL, X_SYMBOL);
+      const computerMove = getComputerMoveMinMax(Array(BOARD_SIZE * BOARD_SIZE).fill(null), O_SYMBOL, X_SYMBOL);
       // If the computer has a valid move, make it and set the next turn to the player
       const newSquares = Array(BOARD_SIZE * BOARD_SIZE).fill(null);
       newSquares[computerMove] = O_SYMBOL;
@@ -157,12 +148,9 @@ function App() {
   // Function to find the winning move for the computer
   const findWinningMove = (squares, symbol, lines) => {
     for (const [a, b, c] of lines) {
-      if (squares[a] === squares[b] && squares[a] === symbol && squares[c] === null)
-        return c;
-      if (squares[a] === squares[c] && squares[a] === symbol && squares[b] === null)
-        return b;
-      if (squares[b] === squares[c] && squares[b] === symbol && squares[a] === null)
-        return a;
+      if (squares[a] === squares[b] && squares[a] === symbol && squares[c] === null) return c;
+      if (squares[a] === squares[c] && squares[a] === symbol && squares[b] === null) return b;
+      if (squares[b] === squares[c] && squares[b] === symbol && squares[a] === null) return a;
     }
     return null;
   };
@@ -177,15 +165,62 @@ function App() {
     if (move !== null) return move;
 
     // If neither can win, make a random move
-    const emptySquares = squares
-      .map((sq, i) => (sq === null ? i : null))
-      .filter((i) => i !== null);
+    const emptySquares = squares.map((sq, i) => (sq === null ? i : null)).filter((i) => i !== null);
     if (emptySquares.length) {
       const randomMove = Math.floor(Math.random() * emptySquares.length);
       return emptySquares[randomMove];
     }
 
     return null;
+  };
+
+  const getComputerMoveMinMax = (squares, mySymbol, opponentSymbol) => {
+    let bestMove = -1;
+    let bestScore = -10000;
+
+    for (let i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
+      if (!squares[i]) {
+        let squaresCopy = [...squares];
+        squaresCopy[i] = mySymbol;
+
+        let score = minMaxFn(squaresCopy, 9, false, mySymbol, opponentSymbol);
+
+        if (score > bestScore) {
+          bestScore = score;
+          bestMove = i;
+        }
+      }
+    }
+
+    return bestMove;
+  };
+
+  const minMaxFn = (squares, depth, isMaximizer, mySymbol, opponentSymbol) => {
+    let result = checkForWin(squares, mySymbol);
+
+    if (result != WIN_STATE_POINTS.NOT_FINISHED) {
+      return result * depth;
+    } else {
+      let maxScore = -1000;
+      let minScore = 1000;
+
+      for (let i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
+        if (!squares[i]) {
+          let squaresCopy = [...squares];
+          squaresCopy[i] = mySymbol;
+
+          if (isMaximizer) {
+            squaresCopy[i] = mySymbol;
+            maxScore = Math.max(maxScore, minMaxFn(squaresCopy, depth - 1, false, mySymbol, opponentSymbol));
+          } else {
+            squaresCopy[i] = opponentSymbol;
+            minScore = Math.min(minScore, minMaxFn(squaresCopy, depth - 1, true, mySymbol, opponentSymbol));
+          }
+        }
+      }
+
+      return isMaximizer ? maxScore : minScore;
+    }
   };
 
   const status = computeGameStatus(squares, xIsNext, X_SYMBOL, O_SYMBOL);
@@ -196,15 +231,7 @@ function App() {
         <li className={`player-icon ${xIsNext ? "player-active" : ""}`}>
           {X_SYMBOL}
           {showMessage.player.show && (
-            <div
-              className={`message-container ${
-                showMessage.player.show ? "fade-in" : ""
-              }`}
-            >
-              {showMessage.player.type === "winner"
-                ? currentMessage
-                : currentLoserMessage}
-            </div>
+            <div className={`message-container ${showMessage.player.show ? "fade-in" : ""}`}>{showMessage.player.type === "winner" ? currentMessage : currentLoserMessage}</div>
           )}
         </li>
         <li className="battle-score" onClick={handleResetScore}>
@@ -213,44 +240,21 @@ function App() {
         <li className={`computer-icon ${!xIsNext ? "computer-active" : ""}`}>
           {O_SYMBOL}
           {showMessage.computer.show && (
-            <div
-              className={`message-container ${
-                showMessage.computer.show ? "fade-in" : ""
-              }`}
-            >
-              {showMessage.computer.type === "winner"
-                ? currentMessage
-                : currentLoserMessage}
-            </div>
+            <div className={`message-container ${showMessage.computer.show ? "fade-in" : ""}`}>{showMessage.computer.type === "winner" ? currentMessage : currentLoserMessage}</div>
           )}
         </li>
       </ul>
       <div className="progress-bar">
-        <div
-          className="player-progress"
-          style={{ width: `${playerWinPercentage}%` }}
-        ></div>
-        <div
-          className="computer-progress"
-          style={{ width: `${computerWinPercentage}%` }}
-        ></div>
+        <div className="player-progress" style={{ width: `${playerWinPercentage}%` }}></div>
+        <div className="computer-progress" style={{ width: `${computerWinPercentage}%` }}></div>
       </div>
       <div className="game-wrapper">
         <button className="restart-button" onClick={handleNewGame}>
           <span className="material-symbols-outlined">refresh</span>
         </button>
-        <Board
-          squares={squares}
-          handleClick={handleClick}
-          xIsNext={xIsNext}
-          findWinningLine={findWinningLine}
-        />
+        <Board squares={squares} handleClick={handleClick} xIsNext={xIsNext} findWinningLine={findWinningLine} />
         {status === "Draw Game! No one won this game." || findWinningLine(squares) ? (
-          <button
-            className="new-game-button"
-            aria-label={`Start a new game`}
-            onClick={handleNewGame}
-          >
+          <button className="new-game-button" aria-label={`Start a new game`} onClick={handleNewGame}>
             New Game
           </button>
         ) : null}
@@ -262,13 +266,7 @@ function App() {
       {findWinningLine(squares) && (
         <audio id="WinnerSound" autoPlay onError={handleAudioError}>
           <source
-            src={
-              findWinningLine(squares).winner === X_SYMBOL
-                ? "/audio/x_wins.mp3"
-                : findWinningLine(squares).winner === O_SYMBOL
-                ? "/audio/o_wins.mp3"
-                : ""
-            }
+            src={findWinningLine(squares).winner === X_SYMBOL ? "/audio/x_wins.mp3" : findWinningLine(squares).winner === O_SYMBOL ? "/audio/o_wins.mp3" : ""}
             type="audio/mpeg"
           />
           {audioError || "Your browser does not support the audio element."}
